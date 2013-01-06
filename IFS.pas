@@ -4,13 +4,16 @@ unit IFS;
 
 interface
 
-uses rasterMap,Layer,SimpleMaps,Math,SysUtils,ProgressControll;
+uses Math,SysUtils,ProgressControll;
 
 type CGFunctionWeight = array[0..47] of double;
 
 type oversampledPixel = array[0..2,0..2] of double;
 
 type TProgressProcedure = procedure(progress:integer);
+
+type TPixel = array[0..2] of byte;
+type TLayer = array of array of TPixel;
 
 type CGModel = class
         a:array of CGFunctionWeight;
@@ -554,7 +557,7 @@ begin
       Field:=nil;
       exit;
    end;
-   result:=TLayer.CreateIMG(width,height);
+   setlength(result, width, height);
    max:=0;
    for j:=0 to height-1 do begin
       for i:=0 to width-1 do begin
@@ -609,9 +612,9 @@ begin
         r:=r*a+(1-a)*bckColor.red;
         g:=g*a+(1-a)*bckColor.green;
         b:=b*a+(1-a)*bckColor.blue;
-        Result.color1.setPixel(i,j,math.min(math.Max(0,trunc(R)),255));
-        Result.color2.setPixel(i,j,math.min(math.Max(0,trunc(G)),255));
-        Result.color3.setPixel(i,j,math.min(math.Max(0,trunc(B)),255));
+        Result[i][j][0] := math.min(math.Max(0,trunc(R)),255);
+        Result[i][j][1] := math.min(math.Max(0,trunc(G)),255);
+        Result[i][j][2] := math.min(math.Max(0,trunc(B)),255);
        end;
      end;
    end;

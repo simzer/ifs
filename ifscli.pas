@@ -1,8 +1,8 @@
 program ifscli;
 
 uses
-  Classes, Layer, rasterMap, ProgressControll,
-  Map, math, IFS, IFSPresets, IFSIO;
+  Classes, ProgressControll,
+  math, IFS, IFSIO;
   
 
 procedure doProcessMessages;
@@ -32,7 +32,6 @@ begin
   
   writeln('Initializing...');
   progress := TProgressControll.Create(doProgress,doProcessMessages);
-  kep := TLayer.CreateIMG(w, h);
   
   writeln('Loading...');
   
@@ -48,17 +47,16 @@ begin
   Writeln(F, 'P3');
   Writeln(F, w,' ',h);
   Writeln(F, '255');
-  for j:=0 to kep.height-1 do begin
-    for i:=0 to kep.width-1 do begin
-      write(F, kep.color1.GetPixel(i,j), ' ');
-      write(F, kep.color2.GetPixel(i,j), ' ');
-      write(F, kep.color3.GetPixel(i,j), ' ');
+  for j:=0 to h-1 do begin
+    for i:=0 to w-1 do begin
+      write(F, kep[i][j][0], ' ');
+      write(F, kep[i][j][1], ' ');
+      write(F, kep[i][j][2], ' ');
       writeln(F);
     end;
   end;
    
   writeln('Closing...');  
   CloseFile(F);
-  kep.free;
   CG.free;
 end.

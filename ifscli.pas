@@ -35,7 +35,7 @@ begin
   
   writeln('Loading...');
   
-  CG := CGModel.Create(0,0,0,100,0.75,1,6,2000,0,0,0,0,0,0,0);
+  CG := CGModel.Create(0,0,0,100,75,1,6,2000,0,0,0,0,0,0,0);
   CG := LoadIFS(infile,CG);
 
   writeln('Rendering...');  

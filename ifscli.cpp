@@ -18,6 +18,8 @@ int main(int argc, char **argv) {
   char *infile;
   char *outfile;
 
+  srand(time(NULL));
+  
   printf("IFS Illusions Command line interface\n");
   printf("usage: ifscli -w WIDTH -h HEIGHT -o OUTPUTFILE INPUTFILE\n");
 

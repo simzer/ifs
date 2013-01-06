@@ -5,12 +5,12 @@
 #include <math.h>
 #include "ifs.h"
 
-inline double frand() { return ((double)rand() / RAND_MAX); }
-inline int lrand(int max) { return ((int)(max * (double)rand() / RAND_MAX)); }
+inline double frand() { return (rand() / (RAND_MAX+1.0)); }
+inline int lrand(int max) { return ((int)((double)max * rand() / (RAND_MAX+1.0))); }
 inline double sqr(double x) { return(x*x); }
 inline double sign(double x) { 
-  return ( x < 0 ? -1 : 
-           x > 0 ?  1 : 0); 
+  return ( (x < 0) ? -1 : 
+           (x > 0) ?  1 : 0); 
 }
 inline double fmax (double a, double b ) { return (a<b)?b:a; }
 inline int lmax (int a, int b ) { return (a<b)?b:a; }
@@ -47,11 +47,10 @@ void CGModel::setDistorts()
 }
 
 void CGModel::SetProperties(CGModelProperties p) {
-  srand(time(NULL));
   this->p = p;
   conbination = 10;
-  angle = (p.angledarray > 1) ? 2*M_PI/p.angledarray : 0;
-  FunctionNum = 1 + 9 * (1-p.structure/100);
+  angle = (p.angledarray > 1) ? 2.0*M_PI/p.angledarray : 0;
+  FunctionNum = 1 + 9 * (1-p.structure/100.0);
   setDistorts();
 }
 
@@ -69,9 +68,9 @@ void CGModel::addColor(uint8_t r, uint8_t g, uint8_t b,
   color.blue = b;
   color.alpha = alpha;
   for (i = 0; i < FUNCTIONNUM; i++) {
-    c2[i][0] = (int)(((double)alpha*r+(255.0-alpha)*c[i][0])/255);
-    c2[i][1] = (int)(((double)alpha*g+(255.0-alpha)*c[i][1])/255);
-    c2[i][2] = (int)(((double)alpha*b+(255.0-alpha)*c[i][2])/255);
+    c2[i][0] = (int)(((double)alpha*r+(255.0-alpha)*c[i][0])/255.0);
+    c2[i][1] = (int)(((double)alpha*g+(255.0-alpha)*c[i][1])/255.0);
+    c2[i][2] = (int)(((double)alpha*b+(255.0-alpha)*c[i][2])/255.0);
   }
 }
 
@@ -100,9 +99,9 @@ void CGModel::calculateFunctionWeights() {
   double t, sum1 = 0, sum2 = 0;
   double mul[6];
   for (i = 0; i < FUNCTIONNUM; i++) {
-    mul[0] = 1;
-    mul[1] = (0.4+0.4*sign(abs(a[i][1])-0.5)*4*sqr(abs(a[i][1])-0.5))*mul[0];
-    mul[2] = ((0.5-mul[1])+(3/24)*sqr(a[i][2])+(5/24)*a[i][2]+(1/3))*(mul[0]+mul[1]);
+    mul[0] = 1.0;
+    mul[1] = (0.4+0.4*sign(abs(a[i][1])-0.5)*4.0*sqr(abs(a[i][1])-0.5))*mul[0];
+    mul[2] = ((0.5-mul[1])+(3.0/24.0)*sqr(a[i][2])+(5.0/24.0)*a[i][2]+(1.0/3.0))*(mul[0]+mul[1]);
     mul[3] = mul[1];
     mul[4] = mul[0];
     mul[5] = mul[0]*mul[1];
@@ -114,8 +113,8 @@ void CGModel::calculateFunctionWeights() {
     for (n = 0; n < 6; n++) {
       nn = (n == 0) ? 7 :
            (n == 1) ? 6 : n + 6;
-      a2[i][n] = sign(a[i][n])*mul[n]*p.centralize+(1-p.centralize)*a[i][n];
-      a2[i][nn] = sign(a[i][n+6])*mul[n]*p.centralize+(1-p.centralize)*a[i][nn];
+      a2[i][n] = sign(a[i][n])*mul[n]*p.centralize+(1.0-p.centralize)*a[i][n];
+      a2[i][nn] = sign(a[i][n+6])*mul[n]*p.centralize+(1.0-p.centralize)*a[i][nn];
       if (n >= 3) {
         a2[i][n] = a2[i][n] * p.curved;
         a2[i][nn] = a2[i][nn] * p.curved;
@@ -151,46 +150,46 @@ void CGModel::CreateField(TProgressControll pp) {
 
   field = new TColorOverSamplPixel[width * height];
   calculateFunctionWeights();
-  int imax = (int)(width*height*p.density/(100*p.iteration));
-  double xprev = 0, yprev = 0;
+  int imax = (int)((double)width*height*p.density/(100.0*p.iteration));
+  double xprev = 0.0, yprev = 0.0;
   int typprev = 0;
-  double mf = pow(100,p.MoveFrac);
+  double mf = pow(100.0,p.MoveFrac);
   double ml = fmax(0.25,p.MoveLimit)/* *2 */;
-  x = 2*frand()-1;
-  y = 2*frand()-1;
-  r = g = b = 0;
+  x = 2.0*frand()-1.0;
+  y = 2.0*frand()-1.0;
+  r = g = b = 0.0;
   int counter = 0;
   probcomp = 0.33;
   ipPow = 100;
   colorContrast = 50;
-  cip = pow(10,((100-colorContrast)/50-1));
-  ip = pow(10,(-ipPow/50));
+  cip = pow(10.0,((100.0-colorContrast)/50.0-1.0));
+  ip = pow(10.0,(-ipPow/50.0));
   for (i = 0; i <= imax; i++) {
-    pp(trunc(100*i/imax));
+    pp((int)(100.0*i/imax));
     for (j = 1; j <= p.iteration; j++) {
       counter++;
       if (frand() < probcomp) { 
         typd = typprev;
       } else {
         typd = frand()*FunctionNum/*-1*/;
-        if (trunc(typd)==typprev) typd = typd+1;
+        if ((int)(typd)==typprev) typd = typd+1;
       }
       typ = (int)typd;
       ipn = (ipPow == 100) 
-            ? ((typd-typ <= 0.5) ? 1 : 0)
-            : (1-(sign(typd-typ-0.5)*pow(fabs(2*(typd-typ-0.5)),ip)))/2;
+            ? ((typd-typ <= 0.5) ? 1.0 : 0.0)
+            : (1.0-(sign(typd-typ-0.5)*pow(fabs(2.0*(typd-typ-0.5)),ip)))/2.0;
       for (k = 0; k <= 11; k++) 
-        an[k] = a2[typ][k]*ipn+a2[typ+1][k]*(1-ipn);
+        an[k] = a2[typ][k]*ipn+a2[typ+1][k]*(1.0-ipn);
       for (k = 0; k <= 2; k++) 
-        cn[k] = (int)(c2[typ][k]*ipn+c2[typ+1][k]*(1-ipn));
+        cn[k] = (int)(c2[typ][k]*ipn+c2[typ+1][k]*(1.0-ipn));
 
-      d = (mf == 100) ? 1 : pow(frand(),1/mf);
+      d = (mf == 100) ? 1.0 : pow(frand(),1.0/mf);
       d1 = d*ml+(1-d)*frand();
       d2 = d*ml+(1-d)*frand();
 
-      r = (1-ml)*r + ml*(cip*r+cn[0])/(cip+1);
-      g = (1-ml)*g + ml*(cip*g+cn[1])/(cip+1);
-      b = (1-ml)*b + ml*(cip*b+cn[2])/(cip+1);
+      r = (1.0-ml)*r + ml*(cip*r+cn[0])/(cip+1);
+      g = (1.0-ml)*g + ml*(cip*g+cn[1])/(cip+1);
+      b = (1.0-ml)*b + ml*(cip*b+cn[2])/(cip+1);
 
       tx = ml*x + (1-ml)*xprev;
       ty = ml*y + (1-ml)*yprev;
@@ -217,15 +216,15 @@ void CGModel::CreateField(TProgressControll pp) {
       ynew = ynew;
       typprev = typ;
 
-      if ((fabs(xnew)>10) || (fabs(ynew)>10)) {
-        x = 2*frand()-1;
-        y = 2*frand()-1;
+      if ((fabs(xnew)>10.0) || (fabs(ynew)>10.0)) {
+        x = 2.0*frand()-1.0;
+        y = 2.0*frand()-1.0;
         tx = x;
         ty = y;
         counter = 0;
       } else {
-        x = x+(xnew-x)*(1+(frand()-0.5)*0.1*p.blur);
-        y = y+(ynew-y)*(1+(frand()-0.5)*0.1*p.blur);
+        x = x+(xnew-x)*(1.0+(frand()-0.5)*0.1*p.blur);
+        y = y+(ynew-y)*(1.0+(frand()-0.5)*0.1*p.blur);
       }
       x = (x-XOffset)/XScale;
       y = (y-YOffset)/YScale;
@@ -253,12 +252,12 @@ void CGModel::CreateField(TProgressControll pp) {
           Distorsions0[k] = distorsions[typ][k];
           distortweights0[k] = distortWeights[typ][k];
         }
-        x = (1-ml)*xs + ml*(3*xs+xs0)/4;
-        y = (1-ml)*ys + ml*(3*ys+ys0)/4;
+        x = (1-ml)*xs + ml*(3*xs+xs0)/4.0;
+        y = (1-ml)*ys + ml*(3*ys+ys0)/4.0;
       }
       if (p.DistorType == 29) Distort(x,y);
-      if (frand() < (p.symmetryHor/2)) x = -x;
-      if (frand() < (p.symmetryVer/2)) y = -y;
+      if (frand() < (p.symmetryHor/2.0)) x = -x;
+      if (frand() < (p.symmetryVer/2.0)) y = -y;
       if (angle > 0) {
         dist = sqrt(x*x+y*y);
         fi = atan2(y,x);
@@ -269,8 +268,8 @@ void CGModel::CreateField(TProgressControll pp) {
       if ((x>=-1) && (x<1) && (y>=-1) && (y<1) 
           && (counter >=20)) 
       {
-        osx = (x+1)*(width/2.0);
-        osy = (y+1)*(height/2.0);
+        osx = (x+1.0)*(width/2.0);
+        osy = (y+1.0)*(height/2.0);
         xm = (int)(osx);
         ym = (int)(osy);
         osi = (int)(3*(osx-xm));
@@ -330,15 +329,15 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result) {
           a = log(1+100*a)/log(101);
           a = pow(a, 1.0/p.GammaCorrection);
         }
-        r = 255 * r / 9;
-        g = 255 * g / 9;
-        b = 255 * b / 9;
+        r = 255 * r / 9.0;
+        g = 255 * g / 9.0;
+        b = 255 * b / 9.0;
         r = r * (p.contrast+50)/100.0 + p.brightness; 
         g = g * (p.contrast+50)/100.0 + p.brightness; 
         b = b * (p.contrast+50)/100.0 + p.brightness; 
-        r = r*a + (1-a)*bckColor.red;
-        g = g*a + (1-a)*bckColor.green;
-        b = b*a + (1-a)*bckColor.blue;
+        r = r*a + (1.0-a)*bckColor.red;
+        g = g*a + (1.0-a)*bckColor.green;
+        b = b*a + (1.0-a)*bckColor.blue;
         result[i + j * width][0] = lmin(lmax(0,(int)(r)),255);
         result[i + j * width][1] = lmin(lmax(0,(int)(g)),255);
         result[i + j * width][2] = lmin(lmax(0,(int)(b)),255);

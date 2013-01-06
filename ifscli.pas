@@ -22,6 +22,9 @@ var kep : TLayer;
     infile, outfile : string;
 
 begin
+  //randomize;
+  randseed := 0;
+  
   writeln('IFS Illusions Command line interface');
   writeln('usage: ifscli -w WIDTH -h HEIGHT -o OUTPUTFILE INPUTFILE');
 

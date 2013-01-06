@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "progress.h"
 #include "ifs.h"
@@ -13,7 +14,7 @@ void doProgress(int progress) {
 int main(int argc, char **argv) {
   TLayer kep;
   CGModelWithIO *CG;
-  int i, j, w, h, err;
+  int i, j, w, h;
   FILE *F;
   char *infile;
   char *outfile;

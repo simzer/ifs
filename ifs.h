@@ -12,7 +12,7 @@
 
 typedef double CGFunctionWeight[WEIGHTNUM];
 typedef double oversampledPixel[3][3];
-typedef oversampledPixel TColorOverSamplPixel[3];
+typedef oversampledPixel TColorOverSamplPixel[4];
 typedef double TDistortWeights[3];
 typedef uint8_t TPixel[3];
 typedef TPixel *TLayer;

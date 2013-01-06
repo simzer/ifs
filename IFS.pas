@@ -139,7 +139,6 @@ function CGModel.getChild : CGModel;
           frac : integer;
 begin
    frac := 20; // 5%
-   randomize;
    result := self.Copy;
    for i:=0 to length(result.a)-1 do begin
        for j:=0 to high(a[i]) do begin
@@ -154,7 +153,6 @@ end;
 Constructor CGModel.Create(Centr,curv,dist,iter,struct:integer;arrays,gamma,dens,symH,symV,movF,movL:double;bright,contr,blurr:integer);
     var i,j,dt:integer;
 begin
-    Randomize;
     iteration := iter;
     blur:=blurr/100;
     density:=dens;
@@ -203,7 +201,6 @@ Procedure CGModel.SetProperties;
 begin
     if Centr<>-1 then Centralize:=centr/100;
     if Curv<>-1 then Curved:=curv/100;
-    Randomize;
     blur:=blurr/100;
     //prev iteration := iter;
     iteration := trunc(power(10,round(1+(((log10(iter))-1)*3))));
@@ -257,7 +254,6 @@ end;
 Procedure CGModel.CreateWeights(n:integer);
    var i,j : integer;
 begin
-    randomize;
     setlength(a,n);
     setlength(ai,n);
     setlength(b,n);
@@ -287,7 +283,6 @@ end;
 Procedure CGModel.CreateColors(n:integer);
    var i : integer;
 begin
-    randomize;
     setLength(c,n);
     setLength(c2,n);
     for i:=0 to n-1 do begin
@@ -379,9 +374,8 @@ function CGModel.CreateField;
 begin
    pp.start;
    result:=true;
-   Randomize;
    SetLength(field,width,height);
-   calculateFunctionWeights;
+   calculateFunctionWeights; 
    imax:=trunc(width*height*density/(100*iteration));
    xprev := 0;
    yprev := 0;

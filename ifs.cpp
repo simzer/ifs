@@ -1,7 +1,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <math.h>
 #include "ifs.h"
 
@@ -12,9 +11,9 @@ inline double sign(double x) {
   return ( (x < 0) ? -1 : 
            (x > 0) ?  1 : 0); 
 }
-inline double fmax (double a, double b ) { return (a<b)?b:a; }
-inline int lmax (int a, int b ) { return (a<b)?b:a; }
-inline int lmin (int a, int b ) { return (a>b)?b:a; }
+inline double fmax (double a, double b ) { return((a<b)?b:a); }
+inline int lmax (int a, int b ) { return((a<b)?b:a); }
+inline int lmin (int a, int b ) { return((a>b)?b:a); }
 
 CGModel::CGModel(CGModelProperties p) {
   int i;
@@ -96,11 +95,11 @@ void CGModel::CreateColors(int n) {
 
 void CGModel::calculateFunctionWeights() {
   int i, n, nn;
-  double t, sum1 = 0, sum2 = 0;
+  double t, sum1, sum2;
   double mul[6];
   for (i = 0; i < FUNCTIONNUM; i++) {
     mul[0] = 1.0;
-    mul[1] = (0.4+0.4*sign(abs(a[i][1])-0.5)*4.0*sqr(abs(a[i][1])-0.5))*mul[0];
+    mul[1] = (0.4+0.4*sign(fabs(a[i][1])-0.5)*4.0*sqr(fabs(a[i][1])-0.5))*mul[0];
     mul[2] = ((0.5-mul[1])+(3.0/24.0)*sqr(a[i][2])+(5.0/24.0)*a[i][2]+(1.0/3.0))*(mul[0]+mul[1]);
     mul[3] = mul[1];
     mul[4] = mul[0];
@@ -110,6 +109,8 @@ void CGModel::calculateFunctionWeights() {
       mul[0] = mul[1];
       mul[0] = t;
     }
+    sum1 = 0;
+    sum2 = 0;
     for (n = 0; n < 6; n++) {
       nn = (n == 0) ? 7 :
            (n == 1) ? 6 : n + 6;
@@ -138,7 +139,6 @@ void CGModel::CreateField(TProgressControll pp) {
   double r,g,b,ra;
   int typ;
   double xnew,ynew;
-  double an[24];
   uint8_t cn[3];
   double dist,fi;
   double tx,ty;
@@ -147,7 +147,7 @@ void CGModel::CreateField(TProgressControll pp) {
   double xs0,ys0;
   TDistortion Distorsions0[3];
   double distortweights0[3];
-
+  
   field = new TColorOverSamplPixel[width * height];
   calculateFunctionWeights();
   int imax = (int)((double)width*height*p.density/(100.0*p.iteration));
@@ -177,19 +177,17 @@ void CGModel::CreateField(TProgressControll pp) {
       typ = (int)typd;
       ipn = (ipPow == 100) 
             ? ((typd-typ <= 0.5) ? 1.0 : 0.0)
-            : (1.0-(sign(typd-typ-0.5)*pow(fabs(2.0*(typd-typ-0.5)),ip)))/2.0;
-      for (k = 0; k <= 11; k++) 
-        an[k] = a2[typ][k]*ipn+a2[typ+1][k]*(1.0-ipn);
+            : ((1.0-(sign(typd-typ-0.5)*pow(fabs(2.0*(typd-typ-0.5)),ip)))/2.0);
       for (k = 0; k <= 2; k++) 
         cn[k] = (int)(c2[typ][k]*ipn+c2[typ+1][k]*(1.0-ipn));
-
+      
       d = (mf == 100) ? 1.0 : pow(frand(),1.0/mf);
-      d1 = d*ml+(1-d)*frand();
-      d2 = d*ml+(1-d)*frand();
+      d1 = d*ml+(1.0-d)*frand();
+      d2 = d*ml+(1.0-d)*frand();
 
-      r = (1.0-ml)*r + ml*(cip*r+cn[0])/(cip+1);
-      g = (1.0-ml)*g + ml*(cip*g+cn[1])/(cip+1);
-      b = (1.0-ml)*b + ml*(cip*b+cn[2])/(cip+1);
+      r = (1.0-ml)*r + ml*(cip*r+cn[0])/(cip+1.0);
+      g = (1.0-ml)*g + ml*(cip*g+cn[1])/(cip+1.0);
+      b = (1.0-ml)*b + ml*(cip*b+cn[2])/(cip+1.0);
 
       tx = ml*x + (1-ml)*xprev;
       ty = ml*y + (1-ml)*yprev;
@@ -200,8 +198,8 @@ void CGModel::CreateField(TProgressControll pp) {
       tx = xnew;
       ty = ynew;
 
-      xnew = d1*x + (1-d1)*xprev;
-      ynew = d2*y + (1-d2)*yprev;
+      xnew = d1*x + (1.0-d1)*xprev;
+      ynew = d2*y + (1.0-d2)*yprev;
       xprev = x;
       yprev = y;
       x = xnew;
@@ -252,20 +250,20 @@ void CGModel::CreateField(TProgressControll pp) {
           Distorsions0[k] = distorsions[typ][k];
           distortweights0[k] = distortWeights[typ][k];
         }
-        x = (1-ml)*xs + ml*(3*xs+xs0)/4.0;
-        y = (1-ml)*ys + ml*(3*ys+ys0)/4.0;
+        x = (1.0-ml)*xs + ml*(3.0*xs+xs0)/4.0;
+        y = (1.0-ml)*ys + ml*(3.0*ys+ys0)/4.0;
       }
       if (p.DistorType == 29) Distort(x,y);
       if (frand() < (p.symmetryHor/2.0)) x = -x;
       if (frand() < (p.symmetryVer/2.0)) y = -y;
-      if (angle > 0) {
+      if (angle > 0.0) {
         dist = sqrt(x*x+y*y);
         fi = atan2(y,x);
         ra = (int)(frand() * p.angledarray);
         x = dist*cos(fi+angle*ra);
         y = dist*sin(fi+angle*ra);
       }
-      if ((x>=-1) && (x<1) && (y>=-1) && (y<1) 
+      if ((x>=-1.0) && (x<1.0) && (y>=-1.0) && (y<1.0) 
           && (counter >=20)) 
       {
         osx = (x+1.0)*(width/2.0);

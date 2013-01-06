@@ -20,6 +20,7 @@ var kep : TLayer;
     F : TextFile;
     progress : TProgressControll;
     infile, outfile : string;
+
 begin
   writeln('IFS Illusions Command line interface');
   writeln('usage: ifscli -w WIDTH -h HEIGHT -o OUTPUTFILE INPUTFILE');
@@ -34,7 +35,8 @@ begin
   kep := TLayer.CreateIMG(w, h);
   
   writeln('Loading...');
-  CG := getIMageLogo;
+  
+  CG := CGModel.Create(0,0,0,100,75,1,6,2000,0,0,0,0,0,0,0);
   CG := LoadIFS(infile,CG);
 
   writeln('Rendering...');  

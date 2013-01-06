@@ -56,7 +56,6 @@ type CGModel = class
         MoveLimit : double;
         XScale,YScale,ZScale:double;
         XOffset,YOffset,ZOffset:double;
-        Texture : TLayer;
         field : array of array of array[0..3] of oversampledPixel;
         function getChild : CGModel;
         function Copy : CGModel;
@@ -351,35 +350,6 @@ begin
       for n:=6 to 11 do a2[i][n]:=a2[i][n]/sum2*centralize+(1-centralize)*a2[i][n];
    end;
 end;
-            {
-Procedure CGModel.calculateFunctionWeights;
-    var i,n,nn:integer;
-        t,sum1,sum2 : double;
-begin
-   setlength(a2,length(a));
-   for i:=0 to high(a) do begin
-      sum1 := 0;
-      sum2 := 0;
-
-      for n:=0 to 5 do begin
-         if n>=3 then begin
-            a2[i][n] := a[i][n] * curved;
-            a2[i][n+6] := a[i][n+6] * curved;
-         end else begin
-            a2[i][n] := a[i][n];
-            a2[i][n+6] := a[i][n+6];
-         end;
-         sum1 := sum1 + a2[i][n];
-         sum2 := sum2 + a2[i][n+6];
-      end;
-
-      for n:=0 to 5 do begin
-         a2[i][n]:=a2[i][n]/sum1*centralize+(1-centralize)*a2[i][n];
-         a2[i][n+6]:=a2[i][n+6]/sum2*centralize+(1-centralize)*a2[i][n+6];
-      end;
-   end;
-end;         }
-
 
 function CGModel.CreateField;
   var imax,i,j,n,k,cgt,xm,ym,typMax:integer;
@@ -437,7 +407,7 @@ begin
          inc(counter);
          if random<probcomp then typd := typprev else begin
             typd:=random*functionnum{-1};
-{            if trunc(typd)=typprev then typd := typd+1;}
+            if trunc(typd)=typprev then typd := typd+1;
          end;
          typ:=trunc(typd);
          if ippow = 100 then if typd-typ<=0.5 then ipn := 1 else ipn := 0 else
@@ -574,8 +544,8 @@ begin
 end;
 
 function CGModel.CGMap;
-   var R,G,B,i,j,k,l:integer;
-       max,r0,g0,b0,a,ref:double;
+   var i,j,k,l:integer;
+       R,G,B,max,r0,g0,b0,a,ref:double;
 begin
    width:=w;
    height:=h;
@@ -598,6 +568,7 @@ begin
    if max<>0 then begin
      for j:=0 to height-1 do begin
        for i:=0 to width-1 do begin
+         a := 0;
          R := 0;
          G := 0;
          B := 0;
@@ -612,22 +583,35 @@ begin
                g0:=bckColor.green/255;
                b0:=bckColor.blue/255;
             end;
-            if ref <> 0 then a:=ln(ref)/ln(max) else a := 0;
+            r:=r+r0;
+            g:=g+g0;
+            b:=b+b0; 
+            if ref>a then a:=ref;
+          end;  
+          if false then begin
+            if ref <> 0 then a:=ln(a)/ln(max) else a := 0;
             a:=power(a,1/gammaCorrection);
-            {a:=ref/(max);
+          end else begin
+            a:=a/max;
             if a<>0 then begin
                a:=ln(1+100*a)/ln(101);
                a:=power(a,1/gammaCorrection);
-            end;}      
-            a:=a+brightness/100;
-            a :=((a*255-128)*(tan((contrast+100)*pi/401))+128)/255;  
-            r:=r+trunc(255*r0*a+(1-a)*bckColor.red);
-            g:=g+trunc(255*g0*a+(1-a)*bckColor.green);
-            b:=b+trunc(255*b0*a+(1-a)*bckColor.blue);
-         end;
-         Result.color1.setPixel(i,j,math.min(math.Max(0,round(R/9)),255));
-         Result.color2.setPixel(i,j,math.min(math.Max(0,round(G/9)),255));
-         Result.color3.setPixel(i,j,math.min(math.Max(0,round(B/9)),255));
+            end;
+          end;
+//          a:=a+brightness/100;
+//          a :=((a*255-128)*(tan((contrast+100)*pi/401))+128)/255;  
+        r := 255 * r / 9;
+        g := 255 * g / 9;
+        b := 255 * b / 9;
+        r := r * (contrast+50)/100 + brightness; 
+        g := g * (contrast+50)/100 + brightness; 
+        b := b * (contrast+50)/100 + brightness; 
+        r:=r*a+(1-a)*bckColor.red;
+        g:=g*a+(1-a)*bckColor.green;
+        b:=b*a+(1-a)*bckColor.blue;
+        Result.color1.setPixel(i,j,math.min(math.Max(0,trunc(R)),255));
+        Result.color2.setPixel(i,j,math.min(math.Max(0,trunc(G)),255));
+        Result.color3.setPixel(i,j,math.min(math.Max(0,trunc(B)),255));
        end;
      end;
    end;

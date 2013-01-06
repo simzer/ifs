@@ -134,18 +134,15 @@ void CGModel::calculateFunctionWeights() {
 }
 
 void CGModel::CreateField(TProgressControll pp) {
-  int i,j,n,k,cgt,xm,ym;
-  double dx,dy,x,y,xs,ys,xt,yt,typd,d,d1,d2;
-  double r,g,b,r0,g0,b0,ra;
-  int typ,typ2,typPrev;
-  double v1,v2,xnew,ynew;
+  int i,j,k,xm,ym;
+  double x,y,xs,ys,xt,yt,typd,d,d1,d2;
+  double r,g,b,ra;
+  int typ;
+  double xnew,ynew;
   double an[24];
   uint8_t cn[3];
-  double xp,yp;
   double dist,fi;
-  double xmul,ymul,cmul;
-  double xnew2,ynew2,tx,ty,txnew,tynew;
-  int constFunct;
+  double tx,ty;
   double ip,ipn,cip, osx,osy;
   int osi,osj;
   double xs0,ys0;
@@ -155,7 +152,7 @@ void CGModel::CreateField(TProgressControll pp) {
   field = new TColorOverSamplPixel[width * height];
   calculateFunctionWeights();
   int imax = (int)(width*height*p.density/(100*p.iteration));
-  double xprev = 0, yprev = 0, dprev = 1;
+  double xprev = 0, yprev = 0;
   int typprev = 0;
   double mf = pow(100,p.MoveFrac);
   double ml = fmax(0.25,p.MoveLimit)/* *2 */;

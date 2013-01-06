@@ -36,9 +36,8 @@ double CGModelWithIO::getint(FILE *f, int linenum) {
 
 void CGModelWithIO::loadIFS(char *filename) {
   FILE *f = fopen(filename, "r");
-  int i, imax, j, dt;
-  char s[256];
-  
+  int i, imax, j;
+
   conbination = getint(f, 4);
   FunctionNum = getfloat(f, 2);
   p.centralize = getfloat(f, 2);
@@ -102,98 +101,55 @@ void CGModelWithIO::loadIFS(char *filename) {
 }
 
 void CGModelWithIO::saveIFS(char *filename) {
-/*  FILE f;
+  FILE *f;
   int i, j;
-  char ch;
   
-  with IFS do begin
-   ch:=decimalseparator;
-   decimalseparator:=',';
-   assignfile(f,filename);
-   rewrite(f);
-   writeln(f,'i-Mage Iterated Function System (IFS) format for i-Mage IFS Builder');
-   writeln(f,'Parameters:');
-   writeln(f,'Combinated distort function count:');
-   writeln(f,inttostr(Conbination));
-   writeln(f,'function''s number:');
-   writeln(f,FormatFloat('0.0000',functionnum));
-   writeln(f,'Centralize:');
-   writeln(f,FormatFloat('0.0000',centralize));
-   writeln(f,'Curve:');
-   writeln(f,FormatFloat('0.0000',curved));
-   writeln(f,'Field width:');
-   writeln(f,inttostr(Width));
-   writeln(f,'Field height:');
-   writeln(f,inttostr(height));
-   writeln(f,'Iteration:');
-   writeln(f,inttostr(iteration));
-   writeln(f,'Density:');
-   writeln(f,FormatFloat('0.0000',density));
-   writeln(f,'Distortion type:');
-   writeln(f,inttostr(distorType));
-   writeln(f,'Gamma Correction:');
-   writeln(f,FormatFloat('0.0000',GammaCorrection));
-   writeln(f,'Rotation angle:');
-   writeln(f,FormatFloat('0.0000',angle));
-   writeln(f,'Angled array:');
-   writeln(f,FormatFloat('0.0000',angledarray));
-   writeln(f,'x scale');
-   writeln(f,FormatFloat('0.0000',xScale));
-   writeln(f,'y scale');
-   writeln(f,FormatFloat('0.0000',YScale));
-   writeln(f,'x offset');
-   writeln(f,FormatFloat('0.0000',XOffset));
-   writeln(f,'y offset');
-   writeln(f,FormatFloat('0.0000',YOffset));
-   writeln(f,'Function number:');
-   writeln(f,length(a));
-   for i:=0 to high(a) do begin
-      Writeln(f,inttoStr(i)+'. function`s weights:');
-      for j:=0 to 11 do writeln(f,FormatFloat('0.0000',a[i,j]));
-   end;
-   writeln(f,'Function`s Color (R,G,B):');
-   For i:=0 to high(a) do begin
-      Writeln(f,inttostr(c[i,0]));
-      Writeln(f,inttostr(c[i,1]));
-      Writeln(f,inttostr(c[i,2]));
-   end;
-   writeln(f,'Distort function`s for combine:');
-   For i:=0 to 9 do begin
-      Writeln(f,inttostr(daFunctions[i]));
-   end;
-   writeln(f,'Distort function`s weights (x,y) for combine:');
-   For i:=1 to 27 do begin
-      Writeln(f,FormatFloat('0.0000',da[i].x));
-      Writeln(f,FormatFloat('0.0000',da[i].y));
-   end;
-   writeln(f,'Distort function`s Weights:');
-   For i:=0 to 2 do begin
-      Writeln(f,FormatFloat('0.0000',distortWeights[0][i]));
-   end;
-   writeln(f,'Symmetry Horizontal:');
-   writeln(f,FormatFloat('0.0000',symmetryHor));
-   writeln(f,'Symmetry Vertical:');
-   writeln(f,FormatFloat('0.0000',symmetryVer));
-   writeln(f,'Background Color (Red,Green,Blue):');
-   writeln(f,inttoStr(bckColor.red));
-   writeln(f,inttoStr(bckColor.green));
-   writeln(f,inttoStr(bckColor.blue));
-   writeln(f,'Foreground Color (Red,Green,Blue,alpha):');
-   writeln(f,inttoStr(Color.red));
-   writeln(f,inttoStr(Color.green));
-   writeln(f,inttoStr(Color.blue));
-   writeln(f,inttoStr(Color.alpha));
-   writeln(f,'Brightness:');
-   writeln(f,inttoStr(brightness));
-   writeln(f,'Contrast:');
-   writeln(f,inttoStr(Contrast));
-   writeln(f,'Blur:');
-   writeln(f,FormatFloat('0.0000',blur));
-   writeln(f,'Move Fraction:');
-   writeln(f,FormatFloat('0.0000',moveFrac));
-   writeln(f,'Move Limit:');
-   writeln(f,FormatFloat('0.0000',moveLimit));
-   decimalseparator:=ch;
-   close(f);
-  end;*/
+  f = fopen(filename, "w");
+  fprintf(f,"i-Mage Iterated Function System (IFS) format for i-Mage IFS Builder\n");
+  fprintf(f,"Parameters:\n");
+  fprintf(f,"Combinated distort function count:\n%d\n", conbination);
+  fprintf(f,"function's number:\n%lf\n", FunctionNum);
+  fprintf(f,"Centralize:\n%lf\n", p.centralize);
+  fprintf(f,"Curve:\n%lf\n", p.curved);
+  fprintf(f,"Field width:\n%d\n", width);
+  fprintf(f,"Field height:\n%d\n", height);
+  fprintf(f,"Iteration:\n%d\n", p.iteration);
+  fprintf(f,"Density:\n%lf\n", p.density);
+  fprintf(f,"Distortion type:\n%d\n", p.DistorType);
+  fprintf(f,"Gamma Correction:\n%lf\n", p.GammaCorrection);
+  fprintf(f,"Rotation angle:\n%lf\n", angle);
+  fprintf(f,"Angled array:\n%lf\n", p.angledarray);
+  fprintf(f,"x scale\n%lf\n", XScale);
+  fprintf(f,"y scale\n%lf\n", YScale);
+  fprintf(f,"x offset\n%lf\n", XOffset);
+  fprintf(f,"y offset\n%lf\n", YOffset);
+  fprintf(f,"Function number:\n%d\n",FUNCTIONNUM);
+  for (i = 0; i < FUNCTIONNUM; i++) {
+    fprintf(f,"%d. function`s weights:\n", i);
+    for (j = 0; j <= 11; j++) fprintf(f,"%lf\n", a[i][j]);
+  }
+  fprintf(f,"Function`s Color (R,G,B):\n");
+  for (i = 0; i < FUNCTIONNUM; i++) 
+    fprintf(f, "%d\n%d\n%d\n", c[i][0], c[i][1], c[i][2]);
+  fprintf(f,"Distort function`s for combine:\n");
+  for (i = 0; i <= 9; i++) fprintf(f,"%d\n", daFunctions[i]);
+  fprintf(f,"Distort function`s weights (x,y) for combine:\n");
+  for (i = 1; i <= 27; i++) {
+    fprintf(f,"%lf\n", da[i].x);
+    fprintf(f,"%lf\n", da[i].y);
+  }
+  fprintf(f,"Distort function`s Weights:\n");
+  for (i = 0; i <= 2; i++) fprintf(f,"%lf\n", distortWeights[0][i]);
+  fprintf(f,"Symmetry Horizontal:\n%lf\n", p.symmetryHor);
+  fprintf(f,"Symmetry Vertical:\n%lf\n", p.symmetryVer);
+  fprintf(f,"Background Color (Red,Green,Blue):\n%d\n%d\n%d\n",
+         bckColor.red, bckColor.green, bckColor.blue);
+  fprintf(f,"Foreground Color (Red,Green,Blue,alpha):\n%d\n%d\n%d\n%d\n",
+         color.red, color.green, color.blue, color.alpha);
+  fprintf(f,"Brightness:\n%d\n", p.brightness);
+  fprintf(f,"Contrast:\n%d\n", p.contrast);
+  fprintf(f,"Blur:\n%lf\n", p.blur);
+  fprintf(f,"Move Fraction:\n%lf\n", p.MoveFrac);
+  fprintf(f,"Move Limit:\n%lf\n", p.MoveLimit);
+  fclose(f);
 }

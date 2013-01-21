@@ -305,37 +305,38 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result) {
     for (j = 0; j < height; j++) {
       for (i = 0; i < width; i++) {
         a = r = g = b =0;
-        for (k = 0; k <= 2; k++)   
+        for (k = 0; k <= 2; k++) {
           for (l = 0; l <= 2; l++)  {
             ref = field[i + j * width][0][k][l];
             if (ref != 0) {
               r0 = field[i + j * width][1][k][l]/ref;
               g0 = field[i + j * width][2][k][l]/ref;
               b0 = field[i + j * width][3][k][l]/ref;
+              a  = ref / max;
+              if (a != 0) {
+                a = log(1+100*a)/log(101);
+                a = pow(a, 1.0/p.GammaCorrection);
+              }
+              r0 *= 255;
+              g0 *= 255;
+              b0 *= 255;
+              r0 = r0 * (p.contrast+100)/100.0 + p.brightness; 
+              g0 = g0 * (p.contrast+100)/100.0 + p.brightness; 
+              b0 = b0 * (p.contrast+100)/100.0 + p.brightness; 
+              r0 = lmin(lmax(0,(int)(r0)),255);
+              g0 = lmin(lmax(0,(int)(g0)),255);
+              b0 = lmin(lmax(0,(int)(b0)),255);
             } else {
-              r0 = bckColor.red/255.0;
-              g0 = bckColor.green/255.0;
-              b0 = bckColor.blue/255.0;
+              a = 0;
             }
-            r += r0;
-            g += g0;
-            b += b0; 
-            if (ref>a) a = ref;
-          }  
-        a /= max;
-        if (a != 0) {
-          a = log(1+100*a)/log(101);
-          a = pow(a, 1.0/p.GammaCorrection);
+            r += r0*a + (1.0-a)*bckColor.red;
+            g += g0*a + (1.0-a)*bckColor.green;
+            b += b0*a + (1.0-a)*bckColor.blue;
+          }
         }
-        r = 255 * r / 9.0;
-        g = 255 * g / 9.0;
-        b = 255 * b / 9.0;
-        r = r * (p.contrast+50)/100.0 + p.brightness; 
-        g = g * (p.contrast+50)/100.0 + p.brightness; 
-        b = b * (p.contrast+50)/100.0 + p.brightness; 
-        r = r*a + (1.0-a)*bckColor.red;
-        g = g*a + (1.0-a)*bckColor.green;
-        b = b*a + (1.0-a)*bckColor.blue;
+        r /= 9;
+        b /= 9;
+        g /= 9;
         result[i + j * width][0] = lmin(lmax(0,(int)(r)),255);
         result[i + j * width][1] = lmin(lmax(0,(int)(g)),255);
         result[i + j * width][2] = lmin(lmax(0,(int)(b)),255);

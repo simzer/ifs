@@ -11,7 +11,7 @@
 #define DISTORTNUM 10
 
 typedef double CGFunctionWeight[WEIGHTNUM];
-typedef double oversampledPixel[3][3];
+typedef float oversampledPixel[3][3];
 typedef oversampledPixel TColorOverSamplPixel[4];
 typedef double TDistortWeights[3];
 typedef uint8_t TPixel[3];
@@ -28,6 +28,11 @@ typedef struct {
   uint8_t green;
   uint8_t blue;
 } TColor;
+
+typedef struct {
+  int i, j, x, y;
+  double r, g, b, a;
+} tFieldPoint;
 
 typedef struct {
   double centralize;
@@ -84,12 +89,12 @@ class CGModel {
     void addColor(uint8_t r, uint8_t g, uint8_t b,
                   uint8_t bckr, uint8_t bckg, uint8_t bckb,
                   uint8_t alpha);
-    void CreateField(TProgressControll pp);
     void Distort(double &x, double &y);
   public:
     CGModelProperties p;
     CGModel(CGModelProperties p);
-    void CGMap(TProgressControll pp, int w, int h, TLayer &result);
+    void CreateField(TProgressControll pp, int w, int h, int fd);
+    void CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd, int nfd);
 };
 
 #endif

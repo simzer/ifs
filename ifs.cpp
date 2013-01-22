@@ -1,7 +1,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <math.h>
+#include <unistd.h>
 #include "ifs.h"
 
 inline double frand() { return (rand() / (RAND_MAX+1.0)); }
@@ -133,7 +135,7 @@ void CGModel::calculateFunctionWeights() {
   }
 }
 
-void CGModel::CreateField(TProgressControll pp) {
+void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
   int i,j,k,xm,ym;
   double x,y,xs,ys,xt,yt,typd,d,d1,d2;
   double r,g,b,ra;
@@ -147,8 +149,10 @@ void CGModel::CreateField(TProgressControll pp) {
   double xs0,ys0;
   TDistortion Distorsions0[3];
   double distortweights0[3];
-  
-  field = new TColorOverSamplPixel[width * height];
+
+  printf(".");
+  width = w;
+  height = h;
   calculateFunctionWeights();
   int imax = (int)((double)width*height*p.density/(100.0*p.iteration));
   double xprev = 0.0, yprev = 0.0;
@@ -165,7 +169,7 @@ void CGModel::CreateField(TProgressControll pp) {
   cip = pow(10.0,((100.0-colorContrast)/50.0-1.0));
   ip = pow(10.0,(-ipPow/50.0));
   for (i = 0; i <= imax; i++) {
-    pp((int)(100.0*i/imax));
+    if (pp != 0) pp((int)(100.0*i/imax));
     for (j = 1; j <= p.iteration; j++) {
       counter++;
       if (frand() < probcomp) { 
@@ -272,10 +276,17 @@ void CGModel::CreateField(TProgressControll pp) {
         ym = (int)(osy);
         osi = (int)(3*(osx-xm));
         osj = (int)(3*(osy-ym));
-        field[xm + ym * width][0][osi][osj] += 255;
-        field[xm + ym * width][1][osi][osj] += r;
-        field[xm + ym * width][2][osi][osj] += g;
-        field[xm + ym * width][3][osi][osj] += b;
+        {
+          static tFieldPoint ps[1000];
+          static int pcnt = 0;
+          tFieldPoint p = { osi, osj, xm, ym, r, g, b, 255.0 };
+          ps[pcnt] = p;
+          pcnt ++;
+          if (pcnt == sizeof(ps)/sizeof(tFieldPoint)) {
+            write(fd, ps, sizeof(ps));
+            pcnt = 0;
+          }
+        } 
       }
       x = tx;
       y = ty;
@@ -283,16 +294,35 @@ void CGModel::CreateField(TProgressControll pp) {
   }
 }
   
-void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result) {
+void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd, int nfd) {
   int i, j, k, l;
   double r, g, b, r0, g0, b0, a;
   double max = 0, ref;
-  
+  int nbytes;
   width = w;
   height = h;
-  
-  CreateField(pp);
-  
+
+  field = new TColorOverSamplPixel[width * height];
+  tFieldPoint ps[1000];
+  int finished = 0;
+  int pointCnt = 0;
+  while(finished == 0) {
+    finished = 1;
+    for(j = 0; j < nfd; j++) {
+      nbytes = read(fd[j], ps, sizeof(ps));
+      if (nbytes > 0) {
+        finished = 0;
+        for(i = 0; i < nbytes/sizeof(tFieldPoint); i++) {
+          field[ps[i].x + ps[i].y * width][0][ps[i].i][ps[i].j] += ps[i].a;
+          field[ps[i].x + ps[i].y * width][1][ps[i].i][ps[i].j] += ps[i].r;
+          field[ps[i].x + ps[i].y * width][2][ps[i].i][ps[i].j] += ps[i].g;
+          field[ps[i].x + ps[i].y * width][3][ps[i].i][ps[i].j] += ps[i].b;
+          pointCnt++;
+        }
+      }
+    }
+  }
+  printf("Points processed: %d\n", pointCnt);
   result = new TPixel[width * height];
   for (j = 0; j < height; j++) 
     for (i = 0; i < width; i++) 

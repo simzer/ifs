@@ -2,22 +2,29 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-
+#include <unistd.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
 #include "progress.h"
 #include "ifs.h"
 #include "ifsio.h"
 
 void doProgress(int progress) { 
-  printf("\033[s  %d   \033[u", progress);
+  printf("\033[s  %d   \033[u", progress); fflush(stdout);
 }
 
 int main(int argc, char **argv) {
-  TLayer kep;
   CGModelWithIO *CG;
   int i, j, w, h;
   FILE *F;
   char *infile;
   char *outfile;
+  int numberOfChildren = 16;
+  pid_t *childpid = (pid_t*)malloc(numberOfChildren * sizeof(pid_t));
+  int *fds = (int*)malloc(numberOfChildren * sizeof(int));
+  fd_set rfds;
 
   srand(time(NULL));
   
@@ -34,10 +41,30 @@ int main(int argc, char **argv) {
   CG->loadIFS(infile);
 
   printf("Rendering %d x %d ...\n", w, h);
-  CG->CGMap(doProgress, w, h, kep);
-  
+
+  for (int i = 0; i < numberOfChildren; i++) {
+    int fd[2];
+    pipe(fd);
+    pid_t p;
+    if ((p = fork()) == 0) {
+      close(fd[0]);
+      CG->p.density /= numberOfChildren;
+      CG->CreateField(i == 0 ? doProgress : 0, w, h, fd[1]);
+      free(CG);
+      close(fd[1]);
+      exit(0);
+    } else {
+      close(fd[1]);
+      childpid[i] = p;
+      fds[i] = fd[0];
+    }
+  }
+
+  TLayer kep;
+  CG->CGMap(0, w, h, kep, fds, numberOfChildren);
+
   printf("Saving %s ...\n", outfile);
-  F = fopen(outfile, "w"); 
+  F = fopen(outfile, "w");
   fprintf(F, "P3\n");
   fprintf(F, "%d %d\n", w, h);
   fprintf(F, "255\n");
@@ -49,9 +76,8 @@ int main(int argc, char **argv) {
       fprintf(F, "\n");
     }
   }
-   
-  printf("Closing...\n");  
   fclose(F);
-  free(CG);
+  printf("Closing...\n");
   free(kep);
+  free(CG);
 }

@@ -10,15 +10,15 @@ TARGET = ifsgui
 TEMPLATE = app
 
 
-SOURCES += src/ifsgui.cpp\
-        src/ifsmainwin.cpp \
-    src/ifsio.cpp \
-    src/ifsdistort.cpp \
-    src/ifs.cpp
+SOURCES += src/gui/ifsgui.cpp\
+        src/gui/ifsmainwin.cpp \
+    src/lib/ifsio.cpp \
+    src/lib/ifsdistort.cpp \
+    src/lib/ifs.cpp
 
-HEADERS  += src/ifsmainwin.h \
-    src/ifsio.h \
-    src/ifsdistort.h \
-    src/ifs.h
+HEADERS  += src/gui/ifsmainwin.h \
+    src/lib/ifsio.h \
+    src/lib/ifsdistort.h \
+    src/lib/ifs.h
 
-FORMS    += src/ifsmainwin.ui
+FORMS    += src/gui/ifsmainwin.ui

@@ -2,14 +2,14 @@ TEMPLATE = app
 CONFIG += console
 CONFIG -= qt
 
-SOURCES += src/ifscli.cpp \
-    src/ifsio.cpp \
-    src/ifsdistort.cpp \
-    src/ifs.cpp
+SOURCES += src/cli/ifscli.cpp \
+    src/lib/ifsio.cpp \
+    src/lib/ifsdistort.cpp \
+    src/lib/ifs.cpp
 
 HEADERS += \
-    src/progress.h \
-    src/ifsio.h \
-    src/ifsdistort.h \
-    src/ifs.h
+    src/lib/progress.h \
+    src/lib/ifsio.h \
+    src/lib/ifsdistort.h \
+    src/lib/ifs.h
 

@@ -80,7 +80,7 @@ class CGModel {
     double angle;
     double XScale,YScale,ZScale;
     double XOffset,YOffset,ZOffset;
-    TColorOverSamplPixel *field;
+    TColorOverSamplPixel **field;
     void SetProperties(CGModelProperties p);
     void setDistorts();
     void CreateWeights(int n);

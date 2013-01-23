@@ -302,7 +302,11 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd,
   width = w;
   height = h;
 
-  field = new TColorOverSamplPixel[width * height];
+  field = new TColorOverSamplPixel*[height];
+  for (i = 0; i < height; i++) {
+    field[i] = new TColorOverSamplPixel[width];
+  }
+//  field = new TColorOverSamplPixel[width * height];
   tFieldPoint ps[1000];
   int finished = 0;
   int pointCnt = 0;
@@ -313,10 +317,10 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd,
       if (nbytes > 0) {
         finished = 0;
         for(i = 0; i < nbytes/sizeof(tFieldPoint); i++) {
-          field[ps[i].x + ps[i].y * width][0][ps[i].i][ps[i].j] += ps[i].a;
-          field[ps[i].x + ps[i].y * width][1][ps[i].i][ps[i].j] += ps[i].r;
-          field[ps[i].x + ps[i].y * width][2][ps[i].i][ps[i].j] += ps[i].g;
-          field[ps[i].x + ps[i].y * width][3][ps[i].i][ps[i].j] += ps[i].b;
+          field[ps[i].y][ps[i].x][0][ps[i].i][ps[i].j] += ps[i].a;
+          field[ps[i].y][ps[i].x][1][ps[i].i][ps[i].j] += ps[i].r;
+          field[ps[i].y][ps[i].x][2][ps[i].i][ps[i].j] += ps[i].g;
+          field[ps[i].y][ps[i].x][3][ps[i].i][ps[i].j] += ps[i].b;
           pointCnt++;
         }
       }
@@ -328,7 +332,7 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd,
     for (i = 0; i < width; i++) 
       for (k = 0; k <= 2; k++)   
         for (l = 0; l <= 2; l++)  {
-            ref = field[i + j * width][0][k][l];
+            ref = field[j][i][0][k][l];
             if (ref>max) max = ref;
         }
   if (max != 0) {
@@ -337,11 +341,11 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd,
         a = r = g = b =0;
         for (k = 0; k <= 2; k++) {
           for (l = 0; l <= 2; l++)  {
-            ref = field[i + j * width][0][k][l];
+            ref = field[j][i][0][k][l];
             if (ref != 0) {
-              r0 = field[i + j * width][1][k][l]/ref;
-              g0 = field[i + j * width][2][k][l]/ref;
-              b0 = field[i + j * width][3][k][l]/ref;
+              r0 = field[j][i][1][k][l]/ref;
+              g0 = field[j][i][2][k][l]/ref;
+              b0 = field[j][i][3][k][l]/ref;
               a  = ref / max;
               if (a != 0) {
                 a = log(1+100*a)/log(101);
@@ -373,6 +377,7 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd,
       }
     }
   }
+  for(i = 0; i < height; i++) free(field[i]);
   free(field);
 }
 

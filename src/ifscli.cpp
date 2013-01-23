@@ -11,14 +11,15 @@
 #include "ifs.h"
 #include "ifsio.h"
 
+static void savePFM(TLayer pic, char* outfile, int w, int h);
+
 void doProgress(int progress) { 
   printf("\033[s  %d   \033[u", progress); fflush(stdout);
 }
 
 int main(int argc, char **argv) {
   CGModelWithIO *CG;
-  int i, j, w, h;
-  FILE *F;
+  int w, h;
   char *infile;
   char *outfile;
   int numberOfChildren = 16;
@@ -60,9 +61,17 @@ int main(int argc, char **argv) {
     }
   }
 
-  TLayer kep;
-  CG->CGMap(0, w, h, kep, fds, numberOfChildren);
+  TLayer pic;
+  CG->CGMap(0, w, h, pic, fds, numberOfChildren);
+  savePFM(pic, outfile, w, h);
+  printf("Closing...\n");
+  free(pic);
+  free(CG);
+}
 
+static void savePFM(TLayer pic, char* outfile, int w, int h) {
+  int i, j;
+  FILE *F;
   printf("Saving %s ...\n", outfile);
   F = fopen(outfile, "w");
   fprintf(F, "P3\n");
@@ -70,14 +79,11 @@ int main(int argc, char **argv) {
   fprintf(F, "255\n");
   for (j = 0; j < h; j++) {
     for (i = 0; i < w; i++) {
-      fprintf(F, "%d ", kep[i + j * w][0]);
-      fprintf(F, "%d ", kep[i + j * w][1]);
-      fprintf(F, "%d ", kep[i + j * w][2]);
+      fprintf(F, "%d ", pic[i + j * w][0]);
+      fprintf(F, "%d ", pic[i + j * w][1]);
+      fprintf(F, "%d ", pic[i + j * w][2]);
       fprintf(F, "\n");
     }
   }
   fclose(F);
-  printf("Closing...\n");
-  free(kep);
-  free(CG);
 }

@@ -163,9 +163,9 @@ void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
   y = 2.0*frand()-1.0;
   r = g = b = 0.0;
   int counter = 0;
-  probcomp = 0.33;
-  ipPow = 100;
-  colorContrast = 50;
+  probcomp = 0.33; //todo: make it parameter?
+  ipPow = 100; //todo: make it parameter?
+  colorContrast = 50; //todo: make it parameter?
   cip = pow(10.0,((100.0-colorContrast)/50.0-1.0));
   ip = pow(10.0,(-ipPow/50.0));
   for (i = 0; i <= imax; i++) {

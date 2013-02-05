@@ -3,13 +3,9 @@
 #include <QGraphicsView>
 #include <QGraphicsPixmapItem>
 #include <QFileDialog>
+#include <QThread>
 
 #include <time.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
 
 #include "ifs.h"
 #include "ifsio.h"
@@ -17,16 +13,54 @@
 #include "ifsmainwin.h"
 #include "ui_ifsmainwin.h"
 
+
+void MainIFSFieldCalc::setIFS(CGModelWithIO *ifs, int w, int h) {
+  this->ifs = ifs;
+  this->w = w;
+  this->h = h;
+}
+
+void MainIFSDraw::setIFS(CGModelWithIO *ifs, int w, int h) {
+  this->ifs = ifs;
+  this->w = w;
+  this->h = h;
+}
+
+void MainIFSFieldCalc::run()
+{
+  ifs->p.density = 100000;
+  ifs->CreateField(0, w, h, 0, false);
+}
+
+void MainIFSDraw::run()
+{
+  TLayer pic;
+  while(1) {
+    if (ifs->isFieldInitialised()) {
+      ifs->CGMap(0, w, h, pic, 0, 0);
+      view->drawLayer(pic, w, h);
+      free(pic);
+    }
+    usleep(100);
+  }
+}
+
 ifsMainWin::ifsMainWin(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::ifsMainWin)
 {
   ui->setupUi(this);
+  mainView = new imageView(this);
+  ui->centralWidget->setLayout(new QGridLayout(this));
+  ui->centralWidget->layout()->addWidget(mainView);
+  mainIFS = 0;
 }
 
 ifsMainWin::~ifsMainWin()
 {
   delete ui;
+  IFSCalc.exit();
+  IFSDraw.exit();
 }
 
 void ifsMainWin::on_actionAbout_triggered()
@@ -45,48 +79,15 @@ void ifsMainWin::on_actionOpen_IFS_triggered()
                                                    "",
                                                    tr("Files (*.ifs)"));
   if (!fileName.isNull()) {
-    if (mainIFS != 0) free(mainIFS);
+    if (mainIFS) free(mainIFS);
     mainIFS = new CGModelWithIO({0,0,0,100,0.75,1,6,2000,0,0,0,0,0,0,0});
     mainIFS->loadIFS(fileName.toAscii().data());
-    int fd[2];
-    pipe(fd);
-    pid_t p;
-    if ((p = fork()) == 0) {
-      close(fd[0]);
-      CG->CreateField(0, w, h, fd[1]);
-      free(CG);
-      close(fd[1]);
-      exit(0);
-    }
-    close(fd[1]);
-    childpid[i] = p;
-    int fds[1];
-    fds[0] = fd[0];
-    TLayer pic;
-    CG->CGMap(0, w, h, pic, fds, 1);
-    drawMainIFS(pic);
+    int w = mainView->width();
+    int h = mainView->height();
+    IFSCalc.setIFS(mainIFS, w, h);
+    IFSCalc.start();
+    IFSDraw.setIFS(mainIFS, w, h);
+    IFSDraw.setView(mainView);
+    IFSDraw.start();
   }
 }
-
-
-void ifsMainWin::drawMainIFS(TLayer pic) {
-  int w, h, i, j;
-  w = mainImage->width();
-  h = mainImage->height();
-  for (j = 0; j < h; j++) {
-    QRgb *line = (QRgb*)image->scanLine(j);
-    for (i = 0; i < w; i++) {
-      line[i] =
-           (0x000000FF & ((QRgb)( (pic[i + j * w][0] & 0x000000FF) >> 0  ) << 0))
-         | (0x0000FF00 & ((QRgb)( (pic[i + j * w][1] & 0x0000FF00) >> 8  ) << 8))
-         | (0x00FF0000 & ((QRgb)( (pic[i + j * w][2] & 0x00FF0000) >> 16 ) << 16));
-    }
-  }
-  mainImage->scene()->removeItem(mainImage->pixmap);
-  delete mainImage->pixmap;
-  pixmap = new QGraphicsPixmapItem(QPixmap::fromImage(*image));
-  pixmap->setPos(0,0);
-  scene()->addItem(pixmap);
-  pixmap->setZValue(-1);
-}
-

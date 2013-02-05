@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     if ((p = fork()) == 0) {
       close(fd[0]);
       CG->p.density /= numberOfChildren;
-      CG->CreateField(i == 0 ? doProgress : 0, w, h, fd[1]);
+      CG->CreateField(i == 0 ? doProgress : 0, w, h, fd[1], true);
       free(CG);
       close(fd[1]);
       exit(0);

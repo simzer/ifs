@@ -1,6 +1,8 @@
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include <fcntl.h>
 #include <math.h>
 #include <unistd.h>
@@ -25,11 +27,16 @@ CGModel::CGModel(CGModelProperties p) {
   CreateWeights(10);
   CreateColors(10);
   addColor(0,0,0,0,0,0,0);
+  field = 0;
   for (i = 1; i <= 27; i++) {
     da[i].x = sqr(frand());
     da[i].y = sqr(frand());
   }
   for (i = 0; i <= 9; i++) { daFunctions[i] = 1 + 27.0 * rand() / RAND_MAX; }
+}
+
+CGModel::~CGModel() {
+  deallocateField();
 }
 
 void CGModel::setDistorts()
@@ -135,7 +142,7 @@ void CGModel::calculateFunctionWeights() {
   }
 }
 
-void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
+void CGModel::CreateField(TProgressControll pp, int w, int h, int fd, bool usePipe) {
   int i,j,k,xm,ym;
   double x,y,xs,ys,xt,yt,typd,d,d1,d2;
   double r,g,b,ra;
@@ -151,8 +158,18 @@ void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
   double distortweights0[3];
 
   printf(".");
-  width = w;
-  height = h;
+  if (   (   (w != width)
+          || (h != height)
+          || (field == 0) )
+       && (!usePipe) ) {
+    width = w;
+    height = h;
+    // todo: remove to init function, not threadsafe here
+    fieldInitialised = false;
+    deallocateField();
+    allocateField(w, h);
+    fieldInitialised = true;
+  }
   calculateFunctionWeights();
   int imax = (int)((double)width*height*p.density/(100.0*p.iteration));
   double xprev = 0.0, yprev = 0.0;
@@ -276,16 +293,19 @@ void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
         ym = (int)(osy);
         osi = (int)(3*(osx-xm));
         osj = (int)(3*(osy-ym));
-        {
+
+        tFieldPoint p = { osi, osj, xm, ym, r, g, b, 255.0 };
+        if (usePipe) {
           static tFieldPoint ps[1000];
           static int pcnt = 0;
-          tFieldPoint p = { osi, osj, xm, ym, r, g, b, 255.0 };
           ps[pcnt] = p;
           pcnt ++;
           if (pcnt == sizeof(ps)/sizeof(tFieldPoint)) {
             write(fd, ps, sizeof(ps));
             pcnt = 0;
           }
+        } else {
+          renderFieldPoint(p);
         } 
       }
       x = tx;
@@ -294,39 +314,59 @@ void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
   }
 }
   
-void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd, int nfd) {
-  int i, j, k, l;
-  double r, g, b, r0, g0, b0, a;
-  double max = 0, ref;
-  int nbytes;
-  width = w;
-  height = h;
+void CGModel::renderFieldPoint(tFieldPoint &p) {
+  field[p.y][p.x][0][p.i][p.j] += p.a;
+  field[p.y][p.x][1][p.i][p.j] += p.r;
+  field[p.y][p.x][2][p.i][p.j] += p.g;
+  field[p.y][p.x][3][p.i][p.j] += p.b;
+}
 
+void CGModel::allocateField(int width, int height) {
   field = new TColorOverSamplPixel*[height];
-  for (i = 0; i < height; i++) {
+  for (int i = 0; i < height; i++) {
     field[i] = new TColorOverSamplPixel[width];
+    memset(field[i], 0, width * sizeof(TColorOverSamplPixel));
   }
-//  field = new TColorOverSamplPixel[width * height];
+}
+
+void CGModel::deallocateField() {
+  if (field != 0) {
+    for(int i = 0; i < height; i++) free(field[i]);
+    free(field);
+  }
+  field = 0;
+}
+
+void CGModel::collectFieldPoints(int *fd, int nfd) {
   tFieldPoint ps[1000];
   int finished = 0;
   int pointCnt = 0;
   while(finished == 0) {
     finished = 1;
-    for(j = 0; j < nfd; j++) {
-      nbytes = read(fd[j], ps, sizeof(ps));
+    for(int j = 0; j < nfd; j++) {
+      int nbytes = read(fd[j], ps, sizeof(ps));
       if (nbytes > 0) {
         finished = 0;
-        for(i = 0; i < nbytes/sizeof(tFieldPoint); i++) {
-          field[ps[i].y][ps[i].x][0][ps[i].i][ps[i].j] += ps[i].a;
-          field[ps[i].y][ps[i].x][1][ps[i].i][ps[i].j] += ps[i].r;
-          field[ps[i].y][ps[i].x][2][ps[i].i][ps[i].j] += ps[i].g;
-          field[ps[i].y][ps[i].x][3][ps[i].i][ps[i].j] += ps[i].b;
+        for(int i = 0; i < nbytes/sizeof(tFieldPoint); i++) {
+          renderFieldPoint(ps[i]);
           pointCnt++;
         }
       }
     }
   }
-  printf("Points processed: %d\n", pointCnt);
+}
+
+void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd, int nfd) {
+  int i, j, k, l;
+  double r, g, b, r0, g0, b0, a;
+  double max = 0, ref;
+  width = w;
+  height = h;
+
+  if (nfd > 0) {
+    allocateField(w, h);
+    collectFieldPoints(fd, nfd);
+  }
   result = new TPixel[width * height];
   for (j = 0; j < height; j++) 
     for (i = 0; i < width; i++) 
@@ -377,8 +417,6 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd,
       }
     }
   }
-  for(i = 0; i < height; i++) free(field[i]);
-  free(field);
 }
 
 void CGModel::Distort(double &x, double &y) {

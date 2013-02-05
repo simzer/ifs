@@ -80,6 +80,7 @@ class CGModel {
     double angle;
     double XScale,YScale,ZScale;
     double XOffset,YOffset,ZOffset;
+    bool fieldInitialised;
     TColorOverSamplPixel **field;
     void SetProperties(CGModelProperties p);
     void setDistorts();
@@ -90,11 +91,17 @@ class CGModel {
                   uint8_t bckr, uint8_t bckg, uint8_t bckb,
                   uint8_t alpha);
     void Distort(double &x, double &y);
+    void renderFieldPoint(tFieldPoint &p);
+    void allocateField(int width, int height);
+    void deallocateField();
+    void collectFieldPoints(int *fd, int nfd);
   public:
     CGModelProperties p;
     CGModel(CGModelProperties p);
-    void CreateField(TProgressControll pp, int w, int h, int fd);
+    ~CGModel();
+    void CreateField(TProgressControll pp, int w, int h, int fd, bool usePipe);
     void CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd, int nfd);
+    bool isFieldInitialised() { return(fieldInitialised); }
 };
 
 #endif

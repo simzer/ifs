@@ -14,11 +14,7 @@
    <string>IFS Illusions</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout_3">
-    <item row="0" column="0">
-     <widget class="QGraphicsView" name="mainImage"/>
-    </item>
-   </layout>
+   <layout class="QGridLayout" name="gridLayout_3"/>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

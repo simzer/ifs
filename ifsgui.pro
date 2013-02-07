@@ -17,13 +17,15 @@ SOURCES += src/gui/ifsgui.cpp\
            src/lib/ifsio.cpp \
            src/lib/ifsdistort.cpp \
            src/lib/ifs.cpp \
-    src/gui/imageview.cpp
+    src/gui/imageview.cpp \
+    src/gui/qifs.cpp
 
 HEADERS  += src/gui/ifsmainwin.h \
             src/lib/ifsio.h \
             src/lib/ifsdistort.h \
             src/lib/progress.h \
             src/lib/ifs.h \
-    src/gui/imageview.h
+    src/gui/imageview.h \
+    src/gui/qifs.h
 
 FORMS    += src/gui/ifsmainwin.ui

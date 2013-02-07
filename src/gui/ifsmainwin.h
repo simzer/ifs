@@ -4,8 +4,7 @@
 #include <QThread>
 #include <QMainWindow>
 #include "imageview.h"
-#include "ifs.h"
-#include "ifsio.h"
+#include "qifs.h"
 
 namespace Ui {
 class ifsMainWin;
@@ -50,7 +49,7 @@ private slots:
 private:
   Ui::ifsMainWin *ui;
   imageView *mainView;
-  CGModelWithIO *mainIFS;
+  QIFS mainIFS;
   MainIFSFieldCalc IFSCalc;
   MainIFSDraw IFSDraw;
 };

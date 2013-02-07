@@ -3,6 +3,7 @@
 #include <QGraphicsView>
 #include <QGraphicsPixmapItem>
 #include <QFileDialog>
+#include <QSlider>
 #include <QThread>
 
 #include <time.h>
@@ -41,7 +42,7 @@ void MainIFSDraw::run()
       view->drawLayer(pic, w, h);
       free(pic);
     }
-    usleep(100);
+    usleep(10000);
   }
 }
 
@@ -53,7 +54,10 @@ ifsMainWin::ifsMainWin(QWidget *parent) :
   mainView = new imageView(this);
   ui->centralWidget->setLayout(new QGridLayout(this));
   ui->centralWidget->layout()->addWidget(mainView);
-  mainIFS = 0;
+
+  connect(ui->sliderContrast,   SIGNAL(valueChanged(int)), &mainIFS, SLOT(setContrast(int)));
+  connect(ui->sliderBrightness, SIGNAL(valueChanged(int)), &mainIFS, SLOT(setBrightness(int)));
+  connect(ui->sliderGamma,       SIGNAL(valueChanged(int)), &mainIFS, SLOT(setGamma(int)));
 }
 
 ifsMainWin::~ifsMainWin()
@@ -79,14 +83,14 @@ void ifsMainWin::on_actionOpen_IFS_triggered()
                                                    "",
                                                    tr("Files (*.ifs)"));
   if (!fileName.isNull()) {
-    if (mainIFS) free(mainIFS);
-    mainIFS = new CGModelWithIO({0,0,0,100,0.75,1,6,2000,0,0,0,0,0,0,0});
-    mainIFS->loadIFS(fileName.toAscii().data());
-    int w = mainView->width();
-    int h = mainView->height();
-    IFSCalc.setIFS(mainIFS, w, h);
+    if (mainIFS.ifs) free(mainIFS.ifs);
+    mainIFS.ifs = new CGModelWithIO({0,0,0,100,0.75,1,6,2000,0,0,0,0,0,0,0});
+    mainIFS.ifs->loadIFS(fileName.toAscii().data());
+    int w = 640;
+    int h = 480;
+    IFSCalc.setIFS(mainIFS.ifs, w, h);
     IFSCalc.start();
-    IFSDraw.setIFS(mainIFS, w, h);
+    IFSDraw.setIFS(mainIFS.ifs, w, h);
     IFSDraw.setView(mainView);
     IFSDraw.start();
   }

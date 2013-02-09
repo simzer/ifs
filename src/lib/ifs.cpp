@@ -4,20 +4,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <unistd.h>
-#include "color.h"
 #include "ifs.h"
-
-inline double frand() { return (rand() / (RAND_MAX+1.0)); }
-inline int lrand(int max) { return ((int)((double)max * rand() / (RAND_MAX+1.0))); }
-inline double sqr(double x) { return(x*x); }
-inline double sign(double x) { 
-  return ( (x < 0) ? -1 : 
-           (x > 0) ?  1 : 0); 
-}
-inline double fmax (double a, double b ) { return((a<b)?b:a); }
-inline double fmin (double a, double b ) { return((a>b)?b:a); }
-inline int lmax (int a, int b ) { return((a<b)?b:a); }
-inline int lmin (int a, int b ) { return((a>b)?b:a); }
 
 CGModel::CGModel(CGModelProperties p) {
   int i;
@@ -347,6 +334,44 @@ void CGModel::fillFields(int *fd, int nfd) {
   printf("Points processed: %d\n", pointCnt);
 }
 
+Color CGModel::getSubPixelColor(int i, int j, int k, int l) {
+  double ref = field[j][i][0][k][l];
+  if (ref != 0) {
+    Color c0(field[j][i][1][k][l]/ref,
+             field[j][i][2][k][l]/ref,
+             field[j][i][3][k][l]/ref);              
+    c0 = c0 * 255;
+    c0 = c0 * ((p.contrast+100)/100.0) + p.brightness;
+    c0.limitTo255();
+    return(c0);
+  } else {
+    return Color(0, 0, 0);            
+  }
+}
+
+double CGModel::getSubPixelAlpha(int i, int j, int k, int l, double max) {
+  double a = field[j][i][0][k][l] / max;
+  if (a != 0) {
+    a = log(1+100*a)/log(101);
+    a = pow(a, 1.0/p.GammaCorrection);
+  }
+  return(a);
+}
+
+Color CGModel::getPixelColor(int i, int j, double max) {
+  Color c(0, 0, 0);
+  Color bg(bckColor.red, bckColor.green, bckColor.blue);
+  for (int k = 0; k <= 2; k++) {
+    for (int l = 0; l <= 2; l++)  {
+      double a = getSubPixelAlpha(i, j, k, l, max);
+      Color c0 = getSubPixelColor(i, j, k, l);
+      c = c + c0 * a + bg * (1.0-a);
+    }
+  }
+  c = c / 9.0;
+  return(c);  
+}
+
 void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd, int nfd) {
   width = w;
   height = h;
@@ -357,32 +382,7 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd,
   if (max != 0) {
     for (int j = 0; j < height; j++) {
       for (int i = 0; i < width; i++) {
-        double a = 0;
-        Color c(0, 0, 0);
-        Color bg(bckColor.red, bckColor.green, bckColor.blue);
-        for (int k = 0; k <= 2; k++) {
-          for (int l = 0; l <= 2; l++)  {
-            double ref = field[j][i][0][k][l];
-            Color c0(0, 0, 0);
-            if (ref != 0) {
-              a = ref / max;
-              c0 = Color(field[j][i][1][k][l]/ref,
-                         field[j][i][2][k][l]/ref,
-                         field[j][i][3][k][l]/ref);              
-              if (a != 0) {
-                a = log(1+100*a)/log(101);
-                a = pow(a, 1.0/p.GammaCorrection);
-              }
-              c0 = c0 * 255;
-              c0 = c0 * ((p.contrast+100)/100.0) + p.brightness;
-              c0.limitTo255();
-            } else {
-              a = 0;
-            }
-            c = c + c0 * a + bg * (1.0-a);
-          }
-        }
-        c = c / 9.0;
+        Color c = getPixelColor(i, j, max);
         result[i + j * width][0] = lmin(lmax(0,(int)(c.r)),255);
         result[i + j * width][1] = lmin(lmax(0,(int)(c.g)),255);
         result[i + j * width][2] = lmin(lmax(0,(int)(c.b)),255);

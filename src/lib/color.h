@@ -2,6 +2,8 @@
 #ifndef _COLOR_H_
 #define _COLOR_H_
 
+#include "mathadd.h"
+
 class Color {
 public:
   double r, g, b;

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "progress.h"
 #include "ifsdistort.h"
+#include "color.h"
 
 #define WEIGHTNUM 48
 #define FUNCTIONNUM 10
@@ -95,6 +96,9 @@ class CGModel {
     void deallocateField();
     void addFieldPoint(tFieldPoint &p);
     void fillFields(int *fd, int nfd);
+    Color getPixelColor(int i, int j, double max);
+    Color getSubPixelColor(int i, int j, int k, int l);
+    double getSubPixelAlpha(int i, int j, int k, int l, double max);
   public:
     CGModelProperties p;
     CGModel(CGModelProperties p);

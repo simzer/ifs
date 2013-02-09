@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <unistd.h>
+#include "color.h"
 #include "ifs.h"
 
 inline double frand() { return (rand() / (RAND_MAX+1.0)); }
@@ -14,6 +15,7 @@ inline double sign(double x) {
            (x > 0) ?  1 : 0); 
 }
 inline double fmax (double a, double b ) { return((a<b)?b:a); }
+inline double fmin (double a, double b ) { return((a>b)?b:a); }
 inline int lmax (int a, int b ) { return((a<b)?b:a); }
 inline int lmin (int a, int b ) { return((a>b)?b:a); }
 
@@ -335,7 +337,7 @@ void CGModel::fillFields(int *fd, int nfd) {
       int nbytes = read(fd[j], ps, sizeof(ps));
       if (nbytes > 0) {
         finished = 0;
-        for(int i = 0; i < nbytes/sizeof(tFieldPoint); i++) {
+        for(unsigned int i = 0; i < nbytes/sizeof(tFieldPoint); i++) {
           addFieldPoint(ps[i]);
           pointCnt++;
         }
@@ -346,8 +348,6 @@ void CGModel::fillFields(int *fd, int nfd) {
 }
 
 void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd, int nfd) {
-  int i, j, k, l;
-  double r, g, b, r0, g0, b0, a;
   width = w;
   height = h;
   allocateField();
@@ -355,44 +355,37 @@ void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd,
   result = new TPixel[width * height];
   double max = searchFieldMax();
   if (max != 0) {
-    for (j = 0; j < height; j++) {
-      for (i = 0; i < width; i++) {
-        a = r = g = b =0;
-        for (k = 0; k <= 2; k++) {
-          for (l = 0; l <= 2; l++)  {
+    for (int j = 0; j < height; j++) {
+      for (int i = 0; i < width; i++) {
+        double a = 0;
+        Color c(0, 0, 0);
+        Color bg(bckColor.red, bckColor.green, bckColor.blue);
+        for (int k = 0; k <= 2; k++) {
+          for (int l = 0; l <= 2; l++)  {
             double ref = field[j][i][0][k][l];
+            Color c0(0, 0, 0);
             if (ref != 0) {
-              r0 = field[j][i][1][k][l]/ref;
-              g0 = field[j][i][2][k][l]/ref;
-              b0 = field[j][i][3][k][l]/ref;
-              a  = ref / max;
+              a = ref / max;
+              c0 = Color(field[j][i][1][k][l]/ref,
+                         field[j][i][2][k][l]/ref,
+                         field[j][i][3][k][l]/ref);              
               if (a != 0) {
                 a = log(1+100*a)/log(101);
                 a = pow(a, 1.0/p.GammaCorrection);
               }
-              r0 *= 255;
-              g0 *= 255;
-              b0 *= 255;
-              r0 = r0 * (p.contrast+100)/100.0 + p.brightness; 
-              g0 = g0 * (p.contrast+100)/100.0 + p.brightness; 
-              b0 = b0 * (p.contrast+100)/100.0 + p.brightness; 
-              r0 = lmin(lmax(0,(int)(r0)),255);
-              g0 = lmin(lmax(0,(int)(g0)),255);
-              b0 = lmin(lmax(0,(int)(b0)),255);
+              c0 = c0 * 255;
+              c0 = c0 * ((p.contrast+100)/100.0) + p.brightness;
+              c0.limitTo255();
             } else {
               a = 0;
             }
-            r += r0*a + (1.0-a)*bckColor.red;
-            g += g0*a + (1.0-a)*bckColor.green;
-            b += b0*a + (1.0-a)*bckColor.blue;
+            c = c + c0 * a + bg * (1.0-a);
           }
         }
-        r /= 9;
-        b /= 9;
-        g /= 9;
-        result[i + j * width][0] = lmin(lmax(0,(int)(r)),255);
-        result[i + j * width][1] = lmin(lmax(0,(int)(g)),255);
-        result[i + j * width][2] = lmin(lmax(0,(int)(b)),255);
+        c = c / 9.0;
+        result[i + j * width][0] = lmin(lmax(0,(int)(c.r)),255);
+        result[i + j * width][1] = lmin(lmax(0,(int)(c.g)),255);
+        result[i + j * width][2] = lmin(lmax(0,(int)(c.b)),255);
       }
     }
   }

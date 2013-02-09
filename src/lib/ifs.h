@@ -90,6 +90,11 @@ class CGModel {
                   uint8_t bckr, uint8_t bckg, uint8_t bckb,
                   uint8_t alpha);
     void Distort(double &x, double &y);
+    double searchFieldMax();
+    void allocateField();
+    void deallocateField();
+    void addFieldPoint(tFieldPoint &p);
+    void fillFields(int *fd, int nfd);
   public:
     CGModelProperties p;
     CGModel(CGModelProperties p);

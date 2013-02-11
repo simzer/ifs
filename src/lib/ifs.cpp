@@ -124,6 +124,13 @@ void CGModel::calculateFunctionWeights() {
   }
 }
 
+void CGModel::quadraticFunction(int type, double x, double y, double *xnew, double *ynew) {
+  *xnew =   a2[type][0]*x   + a2[type][1]*y    + a2[type][2]
+          + a2[type][3]*x*x + a2[type][4]*y*y  + a2[type][5]*x*y;
+  *ynew =   a2[type][6]*x   + a2[type][7]*y    + a2[type][8]
+          + a2[type][9]*x*x + a2[type][10]*y*y + a2[type][11]*x*y;
+}
+
 void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
   int i,j,k,xm,ym;
   double x,y,xs,ys,xt,yt,typd,d,d1,d2;
@@ -184,10 +191,7 @@ void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
 
       tx = ml*x + (1-ml)*xprev;
       ty = ml*y + (1-ml)*yprev;
-      xnew = a2[typ][0]*tx+a2[typ][1]*ty+a2[typ][2]
-             +a2[typ][3]*tx*tx+a2[typ][4]*ty*ty+a2[typ][5]*tx*ty;
-      ynew = a2[typ][6]*tx+a2[typ][7]*ty+a2[typ][8]
-             +a2[typ][9]*tx*tx+a2[typ][10]*ty*ty+a2[typ][11]*tx*ty;
+      quadraticFunction(typ, tx, ty, &xnew, &ynew);
       tx = xnew;
       ty = ynew;
 
@@ -197,14 +201,7 @@ void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
       yprev = y;
       x = xnew;
       y = ynew;
-
-      xnew = a2[typ][0]*x+a2[typ][1]*y+a2[typ][2]
-             +a2[typ][3]*x*x+a2[typ][4]*y*y+a2[typ][5]*x*y;
-      ynew = a2[typ][6]*x+a2[typ][7]*y+a2[typ][8]
-             +a2[typ][9]*x*x+a2[typ][10]*y*y+a2[typ][11]*x*y;
-
-      xnew = xnew;
-      ynew = ynew;
+      quadraticFunction(typ, x, y, &xnew, &ynew);
       typprev = typ;
 
       if ((fabs(xnew)>10.0) || (fabs(ynew)>10.0)) {

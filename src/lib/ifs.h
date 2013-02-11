@@ -99,6 +99,7 @@ class CGModel {
     Color getPixelColor(int i, int j, double max);
     Color getSubPixelColor(int i, int j, int k, int l);
     double getSubPixelAlpha(int i, int j, int k, int l, double max);
+    void quadraticFunction(int type, double x, double y, double *xnew, double *ynew);
   public:
     CGModelProperties p;
     CGModel(CGModelProperties p);

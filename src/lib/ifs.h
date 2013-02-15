@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "progress.h"
 #include "ifsdistort.h"
+#include "color.h"
 
 #define WEIGHTNUM 48
 #define FUNCTIONNUM 10
@@ -91,10 +92,24 @@ class CGModel {
                   uint8_t bckr, uint8_t bckg, uint8_t bckb,
                   uint8_t alpha);
     void Distort(double &x, double &y);
+<<<<<<< TREE
     void renderFieldPoint(tFieldPoint &p);
     void allocateField(int width, int height);
+=======
+    double searchFieldMax();
+    void allocateField();
+>>>>>>> MERGE-SOURCE
     void deallocateField();
+<<<<<<< TREE
     void collectFieldPoints(int *fd, int nfd);
+=======
+    void addFieldPoint(tFieldPoint &p);
+    void fillFields(int *fd, int nfd);
+    Color getPixelColor(int i, int j, double max);
+    Color getSubPixelColor(int i, int j, int k, int l);
+    double getSubPixelAlpha(int i, int j, int k, int l, double max);
+    void quadraticFunction(int type, double x, double y, double *xnew, double *ynew);
+>>>>>>> MERGE-SOURCE
   public:
     CGModelProperties p;
     CGModel(CGModelProperties p);

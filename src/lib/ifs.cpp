@@ -8,17 +8,6 @@
 #include <unistd.h>
 #include "ifs.h"
 
-inline double frand() { return (rand() / (RAND_MAX+1.0)); }
-inline int lrand(int max) { return ((int)((double)max * rand() / (RAND_MAX+1.0))); }
-inline double sqr(double x) { return(x*x); }
-inline double sign(double x) { 
-  return ( (x < 0) ? -1 : 
-           (x > 0) ?  1 : 0); 
-}
-inline double fmax (double a, double b ) { return((a<b)?b:a); }
-inline int lmax (int a, int b ) { return((a<b)?b:a); }
-inline int lmin (int a, int b ) { return((a>b)?b:a); }
-
 CGModel::CGModel(CGModelProperties p) {
   int i;
   SetProperties(p);
@@ -142,7 +131,18 @@ void CGModel::calculateFunctionWeights() {
   }
 }
 
+<<<<<<< TREE
 void CGModel::CreateField(TProgressControll pp, int w, int h, int fd, bool usePipe) {
+=======
+void CGModel::quadraticFunction(int type, double x, double y, double *xnew, double *ynew) {
+  *xnew =   a2[type][0]*x   + a2[type][1]*y    + a2[type][2]
+          + a2[type][3]*x*x + a2[type][4]*y*y  + a2[type][5]*x*y;
+  *ynew =   a2[type][6]*x   + a2[type][7]*y    + a2[type][8]
+          + a2[type][9]*x*x + a2[type][10]*y*y + a2[type][11]*x*y;
+}
+
+void CGModel::CreateField(TProgressControll pp, int w, int h, int fd) {
+>>>>>>> MERGE-SOURCE
   int i,j,k,xm,ym;
   double x,y,xs,ys,xt,yt,typd,d,d1,d2;
   double r,g,b,ra;
@@ -212,10 +212,7 @@ void CGModel::CreateField(TProgressControll pp, int w, int h, int fd, bool usePi
 
       tx = ml*x + (1-ml)*xprev;
       ty = ml*y + (1-ml)*yprev;
-      xnew = a2[typ][0]*tx+a2[typ][1]*ty+a2[typ][2]
-             +a2[typ][3]*tx*tx+a2[typ][4]*ty*ty+a2[typ][5]*tx*ty;
-      ynew = a2[typ][6]*tx+a2[typ][7]*ty+a2[typ][8]
-             +a2[typ][9]*tx*tx+a2[typ][10]*ty*ty+a2[typ][11]*tx*ty;
+      quadraticFunction(typ, tx, ty, &xnew, &ynew);
       tx = xnew;
       ty = ynew;
 
@@ -225,14 +222,7 @@ void CGModel::CreateField(TProgressControll pp, int w, int h, int fd, bool usePi
       yprev = y;
       x = xnew;
       y = ynew;
-
-      xnew = a2[typ][0]*x+a2[typ][1]*y+a2[typ][2]
-             +a2[typ][3]*x*x+a2[typ][4]*y*y+a2[typ][5]*x*y;
-      ynew = a2[typ][6]*x+a2[typ][7]*y+a2[typ][8]
-             +a2[typ][9]*x*x+a2[typ][10]*y*y+a2[typ][11]*x*y;
-
-      xnew = xnew;
-      ynew = ynew;
+      quadraticFunction(typ, x, y, &xnew, &ynew);
       typprev = typ;
 
       if ((fabs(xnew)>10.0) || (fabs(ynew)>10.0)) {
@@ -314,30 +304,63 @@ void CGModel::CreateField(TProgressControll pp, int w, int h, int fd, bool usePi
   }
 }
   
+<<<<<<< TREE
 void CGModel::renderFieldPoint(tFieldPoint &p) {
+=======
+double CGModel::searchFieldMax() {  
+  double max = 0;
+  for (int j = 0; j < height; j++) 
+    for (int i = 0; i < width; i++) 
+      for (int k = 0; k <= 2; k++)   
+        for (int l = 0; l <= 2; l++)  {
+          double ref = field[j][i][0][k][l];
+          if (ref>max) max = ref;
+        }
+  return max;
+}
+
+void CGModel::addFieldPoint(tFieldPoint &p) {
+>>>>>>> MERGE-SOURCE
   field[p.y][p.x][0][p.i][p.j] += p.a;
   field[p.y][p.x][1][p.i][p.j] += p.r;
   field[p.y][p.x][2][p.i][p.j] += p.g;
   field[p.y][p.x][3][p.i][p.j] += p.b;
 }
 
+<<<<<<< TREE
 void CGModel::allocateField(int width, int height) {
+=======
+void CGModel::allocateField() {
+>>>>>>> MERGE-SOURCE
   field = new TColorOverSamplPixel*[height];
   for (int i = 0; i < height; i++) {
     field[i] = new TColorOverSamplPixel[width];
+<<<<<<< TREE
     memset(field[i], 0, width * sizeof(TColorOverSamplPixel));
   }
+=======
+  }  
+>>>>>>> MERGE-SOURCE
 }
 
 void CGModel::deallocateField() {
+<<<<<<< TREE
   if (field != 0) {
     for(int i = 0; i < height; i++) free(field[i]);
     free(field);
   }
   field = 0;
+=======
+  for(int i = 0; i < height; i++) free(field[i]);
+  free(field);
+>>>>>>> MERGE-SOURCE
 }
 
+<<<<<<< TREE
 void CGModel::collectFieldPoints(int *fd, int nfd) {
+=======
+void CGModel::fillFields(int *fd, int nfd) {
+>>>>>>> MERGE-SOURCE
   tFieldPoint ps[1000];
   int finished = 0;
   int pointCnt = 0;
@@ -347,76 +370,98 @@ void CGModel::collectFieldPoints(int *fd, int nfd) {
       int nbytes = read(fd[j], ps, sizeof(ps));
       if (nbytes > 0) {
         finished = 0;
+<<<<<<< TREE
         for(int i = 0; i < nbytes/sizeof(tFieldPoint); i++) {
           renderFieldPoint(ps[i]);
+=======
+        for(unsigned int i = 0; i < nbytes/sizeof(tFieldPoint); i++) {
+          addFieldPoint(ps[i]);
+>>>>>>> MERGE-SOURCE
           pointCnt++;
         }
       }
     }
+<<<<<<< TREE
+  }
+=======
+  }  
+  printf("Points processed: %d\n", pointCnt);
+}
+
+Color CGModel::getSubPixelColor(int i, int j, int k, int l) {
+  double ref = field[j][i][0][k][l];
+  if (ref != 0) {
+    Color c0(field[j][i][1][k][l]/ref,
+             field[j][i][2][k][l]/ref,
+             field[j][i][3][k][l]/ref);              
+    c0 = c0 * 255;
+    c0 = c0 * ((p.contrast+100)/100.0) + p.brightness;
+    c0.limitTo255();
+    return(c0);
+  } else {
+    return Color(0, 0, 0);            
   }
 }
 
+double CGModel::getSubPixelAlpha(int i, int j, int k, int l, double max) {
+  double a = field[j][i][0][k][l] / max;
+  if (a != 0) {
+    a = log(1+100*a)/log(101);
+    a = pow(a, 1.0/p.GammaCorrection);
+  }
+  return(a);
+}
+
+Color CGModel::getPixelColor(int i, int j, double max) {
+  Color c(0, 0, 0);
+  Color bg(bckColor.red, bckColor.green, bckColor.blue);
+  for (int k = 0; k <= 2; k++) {
+    for (int l = 0; l <= 2; l++)  {
+      double a = getSubPixelAlpha(i, j, k, l, max);
+      Color c0 = getSubPixelColor(i, j, k, l);
+      c = c + c0 * a + bg * (1.0-a);
+    }
+  }
+  c = c / 9.0;
+  return(c);  
+>>>>>>> MERGE-SOURCE
+}
+
 void CGModel::CGMap(TProgressControll pp, int w, int h, TLayer &result, int *fd, int nfd) {
+<<<<<<< TREE
   int i, j, k, l;
   double r, g, b, r0, g0, b0, a;
   double max = 0, ref;
+=======
+>>>>>>> MERGE-SOURCE
   width = w;
   height = h;
+<<<<<<< TREE
 
   if (nfd > 0) {
     allocateField(w, h);
     collectFieldPoints(fd, nfd);
   }
+=======
+  allocateField();
+  fillFields(fd, nfd);
+>>>>>>> MERGE-SOURCE
   result = new TPixel[width * height];
-  for (j = 0; j < height; j++) 
-    for (i = 0; i < width; i++) 
-      for (k = 0; k <= 2; k++)   
-        for (l = 0; l <= 2; l++)  {
-            ref = field[j][i][0][k][l];
-            if (ref>max) max = ref;
-        }
+  double max = searchFieldMax();
   if (max != 0) {
-    for (j = 0; j < height; j++) {
-      for (i = 0; i < width; i++) {
-        a = r = g = b =0;
-        for (k = 0; k <= 2; k++) {
-          for (l = 0; l <= 2; l++)  {
-            ref = field[j][i][0][k][l];
-            if (ref != 0) {
-              r0 = field[j][i][1][k][l]/ref;
-              g0 = field[j][i][2][k][l]/ref;
-              b0 = field[j][i][3][k][l]/ref;
-              a  = ref / max;
-              if (a != 0) {
-                a = log(1+100*a)/log(101);
-                a = pow(a, 1.0/p.GammaCorrection);
-              }
-              r0 *= 255;
-              g0 *= 255;
-              b0 *= 255;
-              r0 = r0 * (p.contrast+100)/100.0 + p.brightness; 
-              g0 = g0 * (p.contrast+100)/100.0 + p.brightness; 
-              b0 = b0 * (p.contrast+100)/100.0 + p.brightness; 
-              r0 = lmin(lmax(0,(int)(r0)),255);
-              g0 = lmin(lmax(0,(int)(g0)),255);
-              b0 = lmin(lmax(0,(int)(b0)),255);
-            } else {
-              a = 0;
-            }
-            r += r0*a + (1.0-a)*bckColor.red;
-            g += g0*a + (1.0-a)*bckColor.green;
-            b += b0*a + (1.0-a)*bckColor.blue;
-          }
-        }
-        r /= 9;
-        b /= 9;
-        g /= 9;
-        result[i + j * width][0] = lmin(lmax(0,(int)(r)),255);
-        result[i + j * width][1] = lmin(lmax(0,(int)(g)),255);
-        result[i + j * width][2] = lmin(lmax(0,(int)(b)),255);
+    for (int j = 0; j < height; j++) {
+      for (int i = 0; i < width; i++) {
+        Color c = getPixelColor(i, j, max);
+        result[i + j * width][0] = lmin(lmax(0,(int)(c.r)),255);
+        result[i + j * width][1] = lmin(lmax(0,(int)(c.g)),255);
+        result[i + j * width][2] = lmin(lmax(0,(int)(c.b)),255);
       }
     }
   }
+<<<<<<< TREE
+=======
+  deallocateField();
+>>>>>>> MERGE-SOURCE
 }
 
 void CGModel::Distort(double &x, double &y) {
